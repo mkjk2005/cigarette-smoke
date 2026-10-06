@@ -1,0 +1,95 @@
+:root {
+  /* Tempo: one beat at 168 bpm = 60s / 168 ≈ 0.357s */
+  --bpm: 168;
+  --beat: calc(60s / var(--bpm));
+
+  --ribbon: #fdb2a4;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Background: the image blurred, covering the whole screen.
+   The negative inset keeps the blur's soft edges off-screen. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -40px;
+  z-index: -1;
+  /* 75% shifts the crop down so more of the image's bottom stays visible
+     on wide screens (50% = centered, 100% = bottom edge fully visible). */
+  background: url("background.jpg") center 75% / cover no-repeat;
+  filter: blur(12px);
+}
+
+.stage {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ribbon {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  filter: drop-shadow(0 0 8px rgba(122, 35, 72, 0.6));
+}
+
+.ribbon text {
+  /* Monoline script, thickened with a matching stroke so every letter
+     is an even-width band, then shaded like satin by the SVG filter. */
+  font-family: "Sacramento", "Snell Roundhand", cursive;
+  font-size: 180px;
+  fill: var(--ribbon);
+  stroke: var(--ribbon);
+  stroke-width: 9px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: url(#satin);
+}
+
+/* The wave-shaped strip enters from the right and slides left until
+   it's gone. Speed is in beats per screen width (1600 SVG units):
+     lines 1-2: 14 beats per screen
+     line 3:    16 beats per screen
+     lines 4-5: 14 beats per screen
+     line 6:    16 beats per screen
+   Each speed starts when that line enters on the right.
+
+   Measured at font-size 180px (re-measure if lyrics or size change):
+     line 3 starts at x = 3299, line 4 at 7103, line 6 at 10413,
+     text ends at x = 14220
+   Phase 1: 3299 units           at 14 beats → 28.86625 beats
+   Phase 2: 7103 - 3299          at 16 beats → 38.04 beats
+   Phase 3: 10413 - 7103         at 14 beats → 28.9625 beats
+   Phase 4: 14220 + 1600 - 10413 at 16 beats → 54.07 beats
+   Total 149.93875 beats; switches at 19.252%, 44.622%, 63.939% */
+.lyrics {
+  animation: scroll calc(var(--beat) * 149.93875) linear infinite;
+}
+
+@keyframes scroll {
+  0%      { transform: translateX(1600px); }
+  19.252% { transform: translateX(-1699px); }   /* line 3 reaches the right edge */
+  44.622% { transform: translateX(-5503px); }   /* line 4 reaches the right edge */
+  63.939% { transform: translateX(-8813px); }   /* line 6 reaches the right edge */
+  100%    { transform: translateX(-14220px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyrics {
+    animation: none;
+  }
+}
